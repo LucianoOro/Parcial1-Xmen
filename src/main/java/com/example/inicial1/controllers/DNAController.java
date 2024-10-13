@@ -1,9 +1,10 @@
 package com.example.inicial1.controllers;
 
 import com.example.inicial1.Exceptions.InvalidDnaCharacterException;
-import com.example.inicial1.entities.Localidad;
+import com.example.inicial1.dtos.DNARequest;
+import com.example.inicial1.entities.DNA;
 import com.example.inicial1.services.DNAService;
-import com.example.inicial1.services.LocalidadServiceImpl;
+import com.example.inicial1.services.DNAServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,16 +12,19 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @CrossOrigin(origins = "*")
-@RequestMapping(path = "api/v1/dna")
-public class DNAController extends BaseControllerImpl<Localidad, LocalidadServiceImpl>{
+@RequestMapping(path = "/mutant")
+public class DNAController extends BaseControllerImpl<DNA, DNAServiceImpl> {
 
     @Autowired
     private DNAService dnaService;
 
-    // Endpoint que recibe el ADN y determina si es mutante
-    @PostMapping("/mutant")
-    public ResponseEntity<String> isMutant(@RequestBody String[] dna) {
+    // Endpoint que recibe el ADN en formato JSON y determina si es mutante
+    @PostMapping("/")
+    public ResponseEntity<String> isMutant(@RequestBody DNARequest dnaRequest) {
         try {
+            // Obtenemos la secuencia de ADN del objeto DNARequest
+            String[] dna = dnaRequest.getDna();
+
             // Si es mutante, respondemos con HTTP 200
             if (dnaService.isMutant(dna)) {
                 return new ResponseEntity<>("Es un mutante", HttpStatus.OK);
