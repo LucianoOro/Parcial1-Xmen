@@ -1,111 +1,138 @@
 package com.example.inicial1.services;
 
 import com.example.inicial1.Exceptions.InvalidDnaCharacterException;
+import com.example.inicial1.Exceptions.InvalidDnaSizeException; // Importa la excepción
 import com.example.inicial1.entities.DNA;
-import com.example.inicial1.repositories.BaseRepository;
 import com.example.inicial1.repositories.DNARepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class DNAServiceImpl extends BaseServiceImpl<DNA, Long> implements DNAService{
-    @Autowired
-    private DNARepository DNARepository;
+public class DNAServiceImpl extends BaseServiceImpl<DNA, Long> implements DNAService {
 
-    public DNAServiceImpl(BaseRepository<DNA, Long> baseRepository) {
-        super(baseRepository);
+    private final DNARepository dnaRepository;
+
+    @Autowired
+    public DNAServiceImpl(DNARepository dnaRepository) {
+        super(dnaRepository);
+        this.dnaRepository = dnaRepository;
     }
 
     @Override
     public boolean isMutant(String[] dna) {
-    // Primero validar la matriz
+        // Validación completa del ADN
+        validateDnaMatrix(dna);
+
+        int count = 0;
+        int n = dna.length;
+
+        // Verifica horizontalmente
+        for (String row : dna) {
+            count += countSequences(row);
+        }
+
+        // Verifica verticalmente
+        for (int col = 0; col < n; col++) {
+            StringBuilder column = new StringBuilder();
+            for (int row = 0; row < n; row++) {
+                column.append(dna[row].charAt(col));
+            }
+            count += countSequences(column.toString());
+        }
+
+        // Verifica diagonal de izquierda a derecha
+        for (int col = 0; col < n - 3; col++) {
+            for (int row = 0; row < n - 3; row++) {
+                StringBuilder diagonal = new StringBuilder();
+                for (int i = 0; i < 4; i++) {
+                    diagonal.append(dna[row + i].charAt(col + i));
+                }
+                count += countSequences(diagonal.toString());
+            }
+        }
+
+        // Verifica diagonal de derecha a izquierda
+        for (int col = 3; col < n; col++) {
+            for (int row = 0; row < n - 3; row++) {
+                StringBuilder diagonal = new StringBuilder();
+                for (int i = 0; i < 4; i++) {
+                    diagonal.append(dna[row + i].charAt(col - i));
+                }
+                count += countSequences(diagonal.toString());
+            }
+        }
+
+        return count >= 2; // Retorna true si hay 2 o más secuencias
+    }
+
+    private int countSequences(String sequence) {
+        int count = 0;
+        char lastChar = '\0';
+        int charCount = 0;
+
+        for (char c : sequence.toCharArray()) {
+            if (c == lastChar) {
+                charCount++;
+                if (charCount == 4) {
+                    count++;
+                }
+            } else {
+                lastChar = c;
+                charCount = 1;
+            }
+        }
+        return count;
+    }
+
+    // Validación completa del ADN
+    private void validateDnaMatrix(String[] dna) {
         if (!isValidNxN(dna)) {
-        throw new InvalidDnaCharacterException("La matriz no es NxN");
-    }
-
+            throw new InvalidDnaSizeException("La matriz de ADN no es de tamaño NxN."); // Lanza InvalidDnaSizeException
+        }
         if (!isValidDnaCharacters(dna)) {
-        throw new InvalidDnaCharacterException("El ADN contiene caracteres no válidos");
+            throw new InvalidDnaCharacterException("El ADN contiene caracteres no válidos");
+        }
     }
 
-    // Verificar si el ADN pertenece a un mutante
-    int n = dna.length;
-    int sequenceCount = 0;
+    @Override
+    public boolean isValidNxN(String[] dna) {
+        int n = dna.length;
+        for (String row : dna) {
+            if (row.length() != n) return false;
+        }
+        return true;
+    }
 
-    // Verificación horizontal
-        for (int i = 0; i < n; i++) {
-        for (int j = 0; j <= n - 4; j++) {
-            if (hasConsecutiveEqualChars(dna[i].substring(j, j + 4))) {
-                sequenceCount++;
-                if (sequenceCount > 1) return true;
+    @Override
+    public boolean isValidDnaCharacters(String[] dna) {
+        String validChars = "ATCG";
+        for (String row : dna) {
+            for (char c : row.toCharArray()) {
+                if (validChars.indexOf(c) == -1) return false;
             }
         }
+        return true;
     }
 
-    // Verificación vertical
-        for (int i = 0; i <= n - 4; i++) {
-        for (int j = 0; j < n; j++) {
-            if (hasConsecutiveEqualChars(new String(new char[]{dna[i].charAt(j), dna[i + 1].charAt(j), dna[i + 2].charAt(j), dna[i + 3].charAt(j)}))) {
-                sequenceCount++;
-                if (sequenceCount > 1) return true;
+    // Verifica si hay 4 caracteres consecutivos iguales en la dirección indicada
+    private boolean hasConsecutiveEqualChars(String[] dna, int row, int col, int rowStep, int colStep) {
+        char firstChar = dna[row].charAt(col);
+        for (int k = 1; k < 4; k++) {
+            if (dna[row + k * rowStep].charAt(col + k * colStep) != firstChar) {
+                return false;
             }
         }
+        return true;
     }
 
-    // Verificación diagonal hacia abajo derecha
-        for (int i = 0; i <= n - 4; i++) {
-        for (int j = 0; j <= n - 4; j++) {
-            if (hasConsecutiveEqualChars(new String(new char[]{dna[i].charAt(j), dna[i + 1].charAt(j + 1), dna[i + 2].charAt(j + 2), dna[i + 3].charAt(j + 3)}))) {
-                sequenceCount++;
-                if (sequenceCount > 1) return true;
+    // Sobrecarga para verificar subcadenas horizontales en una fila
+    private boolean hasConsecutiveEqualChars(String row, int start, int rowStep, int colStep) {
+        char firstChar = row.charAt(start);
+        for (int k = 1; k < 4; k++) {
+            if (row.charAt(start + k * colStep) != firstChar) {
+                return false;
             }
         }
+        return true;
     }
-
-    // Verificación diagonal hacia arriba derecha
-        for (int i = 3; i < n; i++) {
-        for (int j = 0; j <= n - 4; j++) {
-            if (hasConsecutiveEqualChars(new String(new char[]{dna[i].charAt(j), dna[i - 1].charAt(j + 1), dna[i - 2].charAt(j + 2), dna[i - 3].charAt(j + 3)}))) {
-                sequenceCount++;
-                if (sequenceCount > 1) return true;
-            }
-        }
-    }
-
-        return false;
-}
-
-// Validación de que la matriz sea NxN
-@Override
-public boolean isValidNxN(String[] dna) {
-    int n = dna.length;
-    for (String row : dna) {
-        if (row.length() != n) {
-            return false; // La matriz no es NxN
-        }
-    }
-    return true;
-}
-
-// Validación de caracteres permitidos (A, T, C, G)
-@Override
-public boolean isValidDnaCharacters(String[] dna) {
-    String validChars = "ATCG";
-    for (String row : dna) {
-        for (char c : row.toCharArray()) {
-            if (validChars.indexOf(c) == -1) {
-                return false; // Caracter no válido
-            }
-        }
-    }
-    return true;
-}
-
-// Metodo auxiliar para verificar cuatro caracteres consecutivos iguales
-private boolean hasConsecutiveEqualChars(String sequence) {
-    return sequence.charAt(0) == sequence.charAt(1) &&
-            sequence.charAt(1) == sequence.charAt(2) &&
-            sequence.charAt(2) == sequence.charAt(3);
-}
-
-
 }
