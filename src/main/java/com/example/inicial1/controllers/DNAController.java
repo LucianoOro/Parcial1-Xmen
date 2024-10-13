@@ -18,6 +18,11 @@ public class DNAController extends BaseControllerImpl<DNA, DNAServiceImpl> {
     @Autowired
     private DNAService dnaService;
 
+    @GetMapping("/")
+    public ResponseEntity<String> testEndpoint() {
+        return new ResponseEntity<>("El endpoint está funcionando", HttpStatus.OK);
+    }
+    
     // Endpoint que recibe el ADN en formato JSON y determina si es mutante
     @PostMapping("/")
     public ResponseEntity<String> isMutant(@RequestBody DNARequest dnaRequest) {
