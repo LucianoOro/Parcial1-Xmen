@@ -22,24 +22,25 @@ public class DNAController extends BaseControllerImpl<DNA, DNAServiceImpl> {
     public ResponseEntity<String> testEndpoint() {
         return new ResponseEntity<>("El endpoint está funcionando", HttpStatus.OK);
     }
-    
+
     // Endpoint que recibe el ADN en formato JSON y determina si es mutante
     @PostMapping("/")
     public ResponseEntity<String> isMutant(@RequestBody DNARequest dnaRequest) {
         try {
-            // Obtenemos la secuencia de ADN del objeto DNARequest
             String[] dna = dnaRequest.getDna();
+            boolean esMutante = dnaService.esMutante(dna);
 
-            // Si es mutante, respondemos con HTTP 200
-            if (dnaService.isMutant(dna)) {
-                return new ResponseEntity<>("Es un mutante", HttpStatus.OK);
-            } else {
-                // Si no es mutante, respondemos con HTTP 403
-                return new ResponseEntity<>("No es mutante", HttpStatus.FORBIDDEN);
-            }
+            // Guardar ADN en la base de datos
+            dnaService.saveDnaSequence(dna, esMutante);
+
+            return esMutante ?
+                    new ResponseEntity<>("Es un mutante", HttpStatus.OK) :
+                    new ResponseEntity<>("No es mutante", HttpStatus.FORBIDDEN);
         } catch (InvalidDnaCharacterException e) {
-            // Si ocurre una excepción de ADN inválido, respondemos con HTTP 400
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error interno del servidor", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
 }

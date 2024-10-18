@@ -59,6 +59,7 @@ tasks.named('test') {
 	useJUnitPlatform()
 }
 
+//tasks.jar y bootjar son para obtener un ejecutable de java en build/libs
 tasks.jar {
 	enabled = true
 }

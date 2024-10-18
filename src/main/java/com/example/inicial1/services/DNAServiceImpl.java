@@ -1,11 +1,15 @@
 package com.example.inicial1.services;
 
 import com.example.inicial1.Exceptions.InvalidDnaCharacterException;
-import com.example.inicial1.Exceptions.InvalidDnaSizeException; // Importa la excepción
+import com.example.inicial1.Exceptions.InvalidDnaSizeException;
+import com.example.inicial1.dtos.StatsDTO;
 import com.example.inicial1.entities.DNA;
 import com.example.inicial1.repositories.DNARepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class DNAServiceImpl extends BaseServiceImpl<DNA, Long> implements DNAService {
@@ -19,16 +23,17 @@ public class DNAServiceImpl extends BaseServiceImpl<DNA, Long> implements DNASer
     }
 
     @Override
-    public boolean isMutant(String[] dna) {
+    public boolean esMutante(String[] dna) {
         // Validación completa del ADN
         validateDnaMatrix(dna);
 
-        int count = 0;
         int n = dna.length;
 
         // Verifica horizontalmente
         for (String row : dna) {
-            count += countSequences(row);
+            if (countSequences(row) > 0) { // Si se encuentra al menos una secuencia
+                return true; // Retorna true si se encuentra una secuencia
+            }
         }
 
         // Verifica verticalmente
@@ -37,7 +42,9 @@ public class DNAServiceImpl extends BaseServiceImpl<DNA, Long> implements DNASer
             for (int row = 0; row < n; row++) {
                 column.append(dna[row].charAt(col));
             }
-            count += countSequences(column.toString());
+            if (countSequences(column.toString()) > 0) { // Si se encuentra al menos una secuencia
+                return true; // Retorna true si se encuentra una secuencia
+            }
         }
 
         // Verifica diagonal de izquierda a derecha
@@ -47,7 +54,9 @@ public class DNAServiceImpl extends BaseServiceImpl<DNA, Long> implements DNASer
                 for (int i = 0; i < 4; i++) {
                     diagonal.append(dna[row + i].charAt(col + i));
                 }
-                count += countSequences(diagonal.toString());
+                if (countSequences(diagonal.toString()) > 0) { // Si se encuentra al menos una secuencia
+                    return true; // Retorna true si se encuentra una secuencia
+                }
             }
         }
 
@@ -58,11 +67,24 @@ public class DNAServiceImpl extends BaseServiceImpl<DNA, Long> implements DNASer
                 for (int i = 0; i < 4; i++) {
                     diagonal.append(dna[row + i].charAt(col - i));
                 }
-                count += countSequences(diagonal.toString());
+                if (countSequences(diagonal.toString()) > 0) { // Si se encuentra al menos una secuencia
+                    return true; // Retorna true si se encuentra una secuencia
+                }
             }
         }
 
-        return count >= 2; // Retorna true si hay 2 o más secuencias
+        return false; // Retorna false si no hay secuencias encontradas
+    }
+
+
+
+
+    @Override
+    public void saveDnaSequence(String[] dna, boolean esMutante) {
+        DNA dnaEntity = new DNA();
+        dnaEntity.setSequence(dna); // Ahora este metodo acepta el array sin problemas.
+        dnaEntity.setEsMutante(esMutante);
+        dnaRepository.save(dnaEntity); // Guarda la entidad en la base de datos.
     }
 
     private int countSequences(String sequence) {
@@ -84,10 +106,9 @@ public class DNAServiceImpl extends BaseServiceImpl<DNA, Long> implements DNASer
         return count;
     }
 
-    // Validación completa del ADN
     private void validateDnaMatrix(String[] dna) {
         if (!isValidNxN(dna)) {
-            throw new InvalidDnaSizeException("La matriz de ADN no es de tamaño NxN."); // Lanza InvalidDnaSizeException
+            throw new InvalidDnaSizeException("La matriz de ADN no es de tamaño NxN.");
         }
         if (!isValidDnaCharacters(dna)) {
             throw new InvalidDnaCharacterException("El ADN contiene caracteres no válidos");
@@ -114,25 +135,25 @@ public class DNAServiceImpl extends BaseServiceImpl<DNA, Long> implements DNASer
         return true;
     }
 
-    // Verifica si hay 4 caracteres consecutivos iguales en la dirección indicada
-    private boolean hasConsecutiveEqualChars(String[] dna, int row, int col, int rowStep, int colStep) {
-        char firstChar = dna[row].charAt(col);
-        for (int k = 1; k < 4; k++) {
-            if (dna[row + k * rowStep].charAt(col + k * colStep) != firstChar) {
-                return false;
-            }
+    @Override
+    public Map<String, Object> obtenerEstadisticas() {
+        long mutantes = dnaRepository.countByesMutante(true);
+        long humanos = dnaRepository.countByesMutante(false);
+
+
+        double ratio;
+        if (humanos == 0) {
+            ratio = (mutantes > 0) ? 1.0 : 0.0; // Si hay mutantes y no humanos, retorna 1.0
+        } else {
+            ratio = (double) mutantes / humanos; // Cálculo normal si hay humanos
         }
-        return true;
+
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("count_mutant_dna", mutantes);
+        stats.put("count_human_dna", humanos);
+        stats.put("ratio", ratio);
+
+        return stats;
     }
 
-    // Sobrecarga para verificar subcadenas horizontales en una fila
-    private boolean hasConsecutiveEqualChars(String row, int start, int rowStep, int colStep) {
-        char firstChar = row.charAt(start);
-        for (int k = 1; k < 4; k++) {
-            if (row.charAt(start + k * colStep) != firstChar) {
-                return false;
-            }
-        }
-        return true;
-    }
 }
