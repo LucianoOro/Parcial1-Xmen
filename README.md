@@ -108,7 +108,7 @@ En este ejemplo, la respuesta indica que hay un total de 2 secuencias de ADN hum
 ------------
 
 
-##Base de Datos H2
+## Base de Datos H2
 La base de datos H2 almacena cada secuencia de ADN junto con un indicador de si pertenece a un mutante o no. Esto permite que la API tenga acceso rápido y eficiente a los datos de ADN, mejorando la velocidad de respuesta en solicitudes futuras.
 
 | ID  | DNA Sequence                                                            | Mutante |
