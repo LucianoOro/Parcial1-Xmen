@@ -66,7 +66,7 @@ Cuerpo de la Solicitud (Ejemplo de ADN Mutante)
 }`
 Si la secuencia de ADN corresponde a un mutante, la API devolverá una respuesta 200 OK.
 
-####Manejo de Errores
+#### Manejo de Errores
 Si la matriz de ADN enviada no es de tipo NxN o contiene caracteres no válidos (es decir, que no sean 'A', 'T', 'C' o 'G'), la respuesta será:
 
 
@@ -82,7 +82,7 @@ Este mensaje indica que la secuencia de ADN no cumple con el formato requerido.
 ------------
 
 
-###Obtener Estadísticas de ADN (Servicio /stats)
+### Obtener Estadísticas de ADN (Servicio /stats)
 
 - **Ruta**: `/api/v1/dna/stats`
 - **Método**: `GET`
