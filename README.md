@@ -66,7 +66,7 @@ Cuerpo de la Solicitud (Ejemplo de ADN Mutante)
 }`
 Si la secuencia de ADN corresponde a un mutante, la API devolverá una respuesta 200 OK.
 
-###Manejo de Errores
+####Manejo de Errores
 Si la matriz de ADN enviada no es de tipo NxN o contiene caracteres no válidos (es decir, que no sean 'A', 'T', 'C' o 'G'), la respuesta será:
 
 
@@ -79,7 +79,10 @@ Si la matriz de ADN enviada no es de tipo NxN o contiene caracteres no válidos 
     }
 Este mensaje indica que la secuencia de ADN no cumple con el formato requerido.
 
-## Obtener Estadísticas de ADN (Servicio /stats)
+------------
+
+
+###Obtener Estadísticas de ADN (Servicio /stats)
 
 - **Ruta**: `/api/v1/dna/stats`
 - **Método**: `GET`
@@ -101,6 +104,9 @@ https://xmenparcial1.onrender.com/api/v1/dna/stats
 }`
 
 En este ejemplo, la respuesta indica que hay un total de 2 secuencias de ADN humano, 2 secuencias de ADN mutante, y un ratio de 1.0 entre humanos y mutantes.
+
+------------
+
 
 ##Base de Datos H2
 La base de datos H2 almacena cada secuencia de ADN junto con un indicador de si pertenece a un mutante o no. Esto permite que la API tenga acceso rápido y eficiente a los datos de ADN, mejorando la velocidad de respuesta en solicitudes futuras.
